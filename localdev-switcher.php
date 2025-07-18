@@ -31,10 +31,11 @@ class LocalDevSwitcher {
    * Constructor.
    */
   public function __construct() {
-    $this->local_plugins_dir = trailingslashit( ABSPATH ) . 'localdev/plugins/';
+    $this->local_plugins_dir = trailingslashit( $_SERVER['DOCUMENT_ROOT'] ) . 'localdev/plugins/';
     
     add_action( 'admin_init', array( $this, 'detect_local_plugins' ) );
     add_filter( 'plugin_row_meta', array( $this, 'add_local_indicator' ), 10, 2 );
+    add_action( 'admin_notices', array( $this, 'maybe_show_missing_localdev_notice' ) );
   }
 
   /**
@@ -79,6 +80,22 @@ class LocalDevSwitcher {
     }
 
     return $links;
+  }
+
+  /**
+   * Display admin notice if /localdev/ folder does not exist.
+   */
+  public function maybe_show_missing_localdev_notice() {
+    $screen = get_current_screen();
+
+    if ( $screen && $screen->id === 'plugins' && ! is_dir( trailingslashit( $_SERVER['DOCUMENT_ROOT'] ) . 'localdev' ) ) {
+      echo '<div class="notice notice-info"><p>';
+      echo '<strong>LocalDev Switcher:</strong> No <code>/localdev/</code> folder found in your web root directory.<br>'; 
+      echo 'To set up local development plugins, create the following folder structure in your project web root:<br>'; 
+      echo '<code>/localdev/plugins/</code> and place your development versions of plugins inside.<br>'; 
+      echo 'For example: <code>/localdev/plugins/my-plugin/</code>';
+      echo '</p></div>';
+    }
   }
 
 }
