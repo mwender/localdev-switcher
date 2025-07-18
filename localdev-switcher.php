@@ -77,33 +77,36 @@ class LocalDevSwitcher {
       return;
     }
 
-    if ( isset( $_GET['localdev_toggle'], $_GET['_wpnonce'] ) && wp_verify_nonce( $_GET['_wpnonce'], 'localdev_toggle' ) ) {
-      $plugin_slug = sanitize_text_field( $_GET['localdev_toggle'] );
-      $overrides = get_option( 'localdev_switcher_overrides', array() );
-      $active_plugins = get_option( 'active_plugins', array() );
+    if ( isset( $_GET['localdev_toggle'], $_GET['_wpnonce'] ) ) {
+      $nonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) );
+      if ( wp_verify_nonce( $nonce, 'localdev_toggle' ) ) {
+        $plugin_slug = sanitize_text_field( wp_unslash( $_GET['localdev_toggle'] ) );
+        $overrides = get_option( 'localdev_switcher_overrides', array() );
+        $active_plugins = get_option( 'active_plugins', array() );
 
-      $local_plugin_file = $this->local_prefix . $plugin_slug . '/' . $plugin_slug . '.php';
-      $vcs_plugin_file   = $plugin_slug . '/' . $plugin_slug . '.php';
+        $local_plugin_file = $this->local_prefix . $plugin_slug . '/' . $plugin_slug . '.php';
+        $vcs_plugin_file   = $plugin_slug . '/' . $plugin_slug . '.php';
 
-      if ( in_array( $plugin_slug, $overrides, true ) ) {
-        // Switch to VCS.
-        $overrides = array_diff( $overrides, array( $plugin_slug ) );
-        $active_plugins = array_map( function( $plugin ) use ( $local_plugin_file, $vcs_plugin_file ) {
-          return $plugin === $local_plugin_file ? $vcs_plugin_file : $plugin;
-        }, $active_plugins );
-      } else {
-        // Switch to Local.
-        $overrides[] = $plugin_slug;
-        $active_plugins = array_map( function( $plugin ) use ( $local_plugin_file, $vcs_plugin_file ) {
-          return $plugin === $vcs_plugin_file ? $local_plugin_file : $plugin;
-        }, $active_plugins );
+        if ( in_array( $plugin_slug, $overrides, true ) ) {
+          // Switch to VCS.
+          $overrides = array_diff( $overrides, array( $plugin_slug ) );
+          $active_plugins = array_map( function( $plugin ) use ( $local_plugin_file, $vcs_plugin_file ) {
+            return $plugin === $local_plugin_file ? $vcs_plugin_file : $plugin;
+          }, $active_plugins );
+        } else {
+          // Switch to Local.
+          $overrides[] = $plugin_slug;
+          $active_plugins = array_map( function( $plugin ) use ( $local_plugin_file, $vcs_plugin_file ) {
+            return $plugin === $vcs_plugin_file ? $local_plugin_file : $plugin;
+          }, $active_plugins );
+        }
+
+        update_option( 'localdev_switcher_overrides', $overrides );
+        update_option( 'active_plugins', $active_plugins );
+
+        wp_redirect( admin_url( 'plugins.php' ) );
+        exit;
       }
-
-      update_option( 'localdev_switcher_overrides', $overrides );
-      update_option( 'active_plugins', $active_plugins );
-
-      wp_redirect( admin_url( 'plugins.php' ) );
-      exit;
     }
   }
 
