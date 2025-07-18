@@ -1,34 +1,46 @@
 <?php
 /**
  * Plugin Name: LocalDev Switcher
- * Description: Toggle between VCS and local development versions of plugins using the localdev-{plugin-slug} pattern.
- * Version: 0.5.3
- * Author: Wenmark Digital
+ * Plugin URI: https://wordpress.org/plugins/localdev-switcher/
+ * Description: Toggle between VCS and local development versions of plugins using the localdev-{plugin-slug} pattern. Place local development versions in wp-content/plugins/localdev-{plugin-slug} and use this plugin to toggle between versions from the Plugins screen.
+ * Version: 0.6.3
+ * Author: Michael Wender
+ * Author URI: https://mwender.com/
  * License: GPL2+
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Requires at least: 5.6
+ * Tested up to: 6.8.2
+ * Requires PHP: 5.6
+ * Tags: development, plugins, local development, workflow
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
   exit;
 }
 
+/**
+ * LocalDevSwitcher Class
+ *
+ * Provides functionality to toggle between version-controlled plugins and local development plugins.
+ */
 class LocalDevSwitcher {
 
   /**
-   * Local plugin prefix.
+   * Prefix for localdev plugins.
    *
    * @var string
    */
   private $local_prefix = 'localdev-';
 
   /**
-   * Local plugin slugs.
+   * Array of detected local plugin slugs.
    *
    * @var array
    */
   private $local_plugin_slugs = array();
 
   /**
-   * Base plugin slug for this plugin.
+   * The slug for this plugin.
    *
    * @var string
    */
@@ -45,14 +57,12 @@ class LocalDevSwitcher {
   }
 
   /**
-   * Detect localdev-{plugin-slug} folders.
+   * Detects localdev plugins.
    */
   public function detect_local_plugins() {
     $all_plugins = get_plugins();
-
     foreach ( $all_plugins as $plugin_file => $plugin_data ) {
       $slug = dirname( $plugin_file );
-
       if ( strpos( $slug, $this->local_prefix ) === 0 ) {
         $this->local_plugin_slugs[] = substr( $slug, strlen( $this->local_prefix ) );
       }
@@ -60,7 +70,7 @@ class LocalDevSwitcher {
   }
 
   /**
-   * Handle toggle action from the admin UI.
+   * Handles toggling between localdev and VCS versions.
    */
   public function handle_toggle_action() {
     if ( ! current_user_can( 'activate_plugins' ) ) {
@@ -98,17 +108,15 @@ class LocalDevSwitcher {
   }
 
   /**
-   * Add meta row indicator and toggle link for local plugins.
+   * Adds local indicator and toggle link to plugin meta rows.
    *
-   * @param array  $links Existing plugin meta links.
-   * @param string $file  Plugin file.
+   * @param array $links Existing meta links.
+   * @param string $file Plugin file.
    * @return array Modified links.
    */
   public function add_local_indicator( $links, $file ) {
-
     $plugin_slug = dirname( $file );
 
-    // Skip self
     if ( $plugin_slug === $this->self_slug ) {
       return $links;
     }
@@ -127,12 +135,11 @@ class LocalDevSwitcher {
         break;
       }
     }
-
     return $links;
   }
 
   /**
-   * Filter all plugins to prevent double listing.
+   * Filters the plugins list to prevent double listing.
    *
    * @param array $plugins All plugins.
    * @return array Filtered plugins.
@@ -143,31 +150,25 @@ class LocalDevSwitcher {
     foreach ( $plugins as $plugin_file => $plugin_data ) {
       $slug = dirname( $plugin_file );
 
-      // Skip self
       if ( $slug === $this->self_slug ) {
         continue;
       }
 
       foreach ( $this->local_plugin_slugs as $base_slug ) {
         if ( $slug === $this->local_prefix . $base_slug ) {
-          // If VCS is active, hide localdev plugin
           if ( ! in_array( $base_slug, $overrides, true ) ) {
             unset( $plugins[ $plugin_file ] );
           }
         }
-
         if ( $slug === $base_slug ) {
-          // If localdev is active, hide VCS plugin
           if ( in_array( $base_slug, $overrides, true ) ) {
             unset( $plugins[ $plugin_file ] );
           }
         }
       }
     }
-
     return $plugins;
   }
-
 }
 
 new LocalDevSwitcher();
