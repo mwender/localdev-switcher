@@ -2,7 +2,7 @@
 **Contributors:** TheWebist
 **Tags:** development, plugins, local development, plugin management, workflow
 **Requires at least:** 5.6
-**Tested up to:** 6.8.2
+**Tested up to:** 6.8
 **Requires PHP:** 5.6
 **Stable tag:** 0.6.3
 **License:** GPL2+
