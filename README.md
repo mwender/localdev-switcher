@@ -1,12 +1,12 @@
-Saved "README.md" created from "readme.txt".
-ebist](https://profiles.wordpress.org/TheWebist/)  
-**Tags:** development, plugins, local development, plugin management, workflow  
-**Requires at least:** 5.6  
-**Tested up to:** 6.8.2  
-**Requires PHP:** 5.6  
-**Stable tag:** 0.6.3  
-**License:** GPL2+  
-**License URI:** https://www.gnu.org/licenses/gpl-2.0.html  
+# LocalDev Switcher #
+**Contributors:** TheWebist
+**Tags:** development, plugins, local development, plugin management, workflow
+**Requires at least:** 5.6
+**Tested up to:** 6.8.2
+**Requires PHP:** 5.6
+**Stable tag:** 0.6.3
+**License:** GPL2+
+**License URI:** https://www.gnu.org/licenses/gpl-2.0.html
 
 Easily switch between version-controlled plugins and local development versions by toggling in the Plugins screen.
 
