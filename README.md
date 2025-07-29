@@ -1,7 +1,7 @@
 # LocalDev Switcher #
 **Contributors:** [thewebist](https://profiles.wordpress.org/thewebist/)  
 **Tags:** development, plugins, local development, plugin management, workflow  
-**Requires at least:** 8.1  
+**Requires at least:** 6.5  
 **Tested up to:** 6.8  
 **Requires PHP:** 8.1  
 **Stable tag:** 0.6.4  

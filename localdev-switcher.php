@@ -8,7 +8,7 @@
  * Author URI: https://mwender.com/
  * License: GPL2+
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Requires at least: 8.1
+ * Requires at least: 6.5
  * Tested up to: 6.8.2
  * Requires PHP: 8.1
  * Tags: development, plugins, local development, workflow
