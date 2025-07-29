@@ -4,7 +4,7 @@
 **Requires at least:** 6.5  
 **Tested up to:** 6.8  
 **Requires PHP:** 8.1  
-**Stable tag:** 0.6.5  
+**Stable tag:** 0.6.6  
 **License:** GPL2+  
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -49,6 +49,9 @@ LocalDev Switcher will default to using the version-controlled plugin.
 2. Toggle between VCS and Local versions of your plugins in the Plugins list.
 
 ## Changelog ##
+
+### 0.6.6 ###
+* Fixing deploy action version
 
 ### 0.6.5 ###
 * Releasing on [WordPress.org Plugins](https://wordpress.org/plugins/localdev-switcher/).
