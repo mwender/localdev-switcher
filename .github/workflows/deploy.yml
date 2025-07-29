@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0 # Ensures all tags are available
 
       - name: Deploy to WordPress.org
-        uses: 10up/action-wordpress-plugin-deploy@v3
+        uses: 10up/action-wordpress-plugin-deploy@stable
         with:
           svn_username: ${{ secrets.SVN_USERNAME }}
           svn_password: ${{ secrets.SVN_PASSWORD }}
