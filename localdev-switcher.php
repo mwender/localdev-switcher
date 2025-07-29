@@ -78,9 +78,9 @@ class LocalDevSwitcher {
     }
 
     if ( isset( $_GET['localdev_toggle'], $_GET['_wpnonce'] ) ) {
-      $nonce = sanitize_text_field( $_GET['_wpnonce'] );
+      $nonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) );
       if ( wp_verify_nonce( $nonce, 'localdev_toggle' ) ) {
-        $plugin_slug     = sanitize_text_field( $_GET['localdev_toggle'] );
+        $plugin_slug     = sanitize_text_field( wp_unslash( $_GET['localdev_toggle'] ) );
         $overrides       = get_option( 'localdev_switcher_overrides', array() );
         $all_plugins     = get_plugins();
         $active_plugins  = get_option( 'active_plugins', array() );
