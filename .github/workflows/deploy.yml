@@ -1,24 +1,36 @@
-name: Deploy Plugin to WordPress.org
+name: Deploy to WordPress.org Repository
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+  release:
+    types: [released]
 
 jobs:
-  deploy:
-    name: Deploy to WordPress.org
+  deploy_to_wp_repository:
+    name: Deploy to WP.org
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Ensures all tags are available
 
-      - name: Deploy to WordPress.org
-        uses: 10up/action-wordpress-plugin-deploy@v1.4.0
+      # Optional: If your plugin needs build steps (npm/composer), add them here.
+      # - name: Build
+      #   run: |
+      #     npm install
+      #     npm run build
+
+      - name: WordPress Plugin Deploy
+        id: deploy
+        uses: 10up/action-wordpress-plugin-deploy@stable
         with:
-          svn_username: ${{ secrets.SVN_USERNAME }}
-          svn_password: ${{ secrets.SVN_PASSWORD }}
-          slug: localdev-switcher
+          generate-zip: true
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ${{ github.workspace }}/${{ github.event.repository.name }}.zip

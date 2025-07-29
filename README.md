@@ -4,7 +4,7 @@
 **Requires at least:** 6.5  
 **Tested up to:** 6.8  
 **Requires PHP:** 8.1  
-**Stable tag:** 0.6.7  
+**Stable tag:** 0.6.8  
 **License:** GPL2+  
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -49,6 +49,10 @@ LocalDev Switcher will default to using the version-controlled plugin.
 2. Toggle between VCS and Local versions of your plugins in the Plugins list.
 
 ## Changelog ##
+
+### 0.6.8 ###
+* Updating deploy action to follow latest conventions for `10up/action-wordpress-plugin-deploy`.
+* Adding WordPress.org Plugin `/assets/` via `/.wordpress-org/`.
 
 ### 0.6.7 ###
 * Updating deploy action `10up/action-wordpress-plugin-deploy` to `v1.4.0` to support our current, simple deploy workflow.

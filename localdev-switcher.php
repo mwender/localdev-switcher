@@ -3,7 +3,7 @@
  * Plugin Name: LocalDev Switcher
  * Plugin URI: https://wordpress.org/plugins/localdev-switcher/
  * Description: Toggle between VCS and local development versions of plugins using the localdev-{plugin-slug} pattern. Place local development versions in wp-content/plugins/localdev-{plugin-slug} and use this plugin to toggle between versions from the Plugins screen.
- * Version: 0.6.7
+ * Version: 0.6.8
  * Author: Michael Wender
  * Author URI: https://mwender.com/
  * License: GPL2+
