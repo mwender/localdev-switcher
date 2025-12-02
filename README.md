@@ -2,7 +2,7 @@
 **Contributors:** [thewebist](https://profiles.wordpress.org/thewebist/)  
 **Tags:** development, plugins, local development, plugin management, workflow  
 **Requires at least:** 6.5  
-**Tested up to:** 6.8  
+**Tested up to:** 6.9  
 **Requires PHP:** 8.1  
 **Stable tag:** 0.6.9  
 **License:** GPL2+  
