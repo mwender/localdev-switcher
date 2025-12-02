@@ -1,0 +1,19 @@
+name: Update plugin assets/readme on WordPress.org
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-assets:
+    name: Push assets and readme
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: WordPress.org plugin asset/readme update
+        uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_USERNAME: ${{ secrets.WP_ORG_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.WP_ORG_PASSWORD }}
