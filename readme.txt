@@ -4,7 +4,7 @@ Tags: development, plugins, local development, plugin management, workflow
 Requires at least: 6.5
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 0.6.9
+Stable tag: 0.7.0
 License: GPL2+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -49,6 +49,9 @@ LocalDev Switcher will default to using the version-controlled plugin.
 2. Toggle between VCS and Local versions of your plugins in the Plugins list.
 
 == Changelog ==
+
+= 0.7.0 =
+* Adding `update-assets.yml` action for future `Tested up to` edits without a full deploy.
 
 = 0.6.9 =
 * Adding proper perms for uploading ZIP to GitHub release.
