@@ -35,7 +35,7 @@ class LocalDevSwitcher {
   private $local_plugin_slugs = array();
 
   /**
-   * Detected theme base slugs (stubbed).
+   * Detected theme base slugs.
    *
    * @var array
    */
@@ -53,10 +53,14 @@ class LocalDevSwitcher {
    */
   public function __construct() {
     add_action( 'admin_init', array( $this, 'detect_local_plugins' ) );
+    add_action( 'admin_init', array( $this, 'detect_local_themes' ) );
     add_action( 'admin_init', array( $this, 'handle_plugin_toggle' ) );
 
     add_filter( 'plugin_row_meta', array( $this, 'add_plugin_indicator' ), 10, 2 );
     add_filter( 'all_plugins', array( $this, 'filter_plugins_list' ), 20 );
+
+    // Theme filtering (no UI yet).
+    add_filter( 'wp_prepare_themes_for_js', array( $this, 'filter_themes_list' ), 20 );
   }
 
   /**
@@ -99,6 +103,21 @@ class LocalDevSwitcher {
 
       if ( strpos( $slug, $this->local_prefix ) === 0 ) {
         $this->local_plugin_slugs[] = substr( $slug, strlen( $this->local_prefix ) );
+      }
+    }
+  }
+
+  /**
+   * Detect localdev themes.
+   *
+   * @return void
+   */
+  public function detect_local_themes() {
+    $themes = wp_get_themes();
+
+    foreach ( $themes as $stylesheet => $theme ) {
+      if ( strpos( $stylesheet, $this->local_prefix ) === 0 ) {
+        $this->local_theme_slugs[] = substr( $stylesheet, strlen( $this->local_prefix ) );
       }
     }
   }
@@ -147,7 +166,6 @@ class LocalDevSwitcher {
     $is_local = in_array( $plugin_slug, $overrides['plugins'], true );
 
     if ( $is_local ) {
-      // Switch to VCS.
       $overrides['plugins'] = array_diff( $overrides['plugins'], array( $plugin_slug ) );
 
       $active_plugins = array_map(
@@ -157,7 +175,6 @@ class LocalDevSwitcher {
         $active_plugins
       );
     } else {
-      // Switch to Local.
       $overrides['plugins'][] = $plugin_slug;
 
       $active_plugins = array_map(
@@ -246,13 +263,41 @@ class LocalDevSwitcher {
   }
 
   /**
-   * === THEME SUPPORT (COMING NEXT) ===
+   * Filter themes list to hide inactive twins.
    *
-   * detect_local_themes()
-   * handle_theme_toggle()
-   * filter_themes_list()
-   * add_theme_badge()
+   * @param array $themes Themes prepared for JS.
+   * @return array
    */
+  public function filter_themes_list( $themes ) {
+    $overrides    = $this->get_overrides();
+    $active_theme = get_stylesheet();
+
+    foreach ( $themes as $stylesheet => $theme_data ) {
+      foreach ( $this->local_theme_slugs as $base_slug ) {
+        $local_slug = $this->local_prefix . $base_slug;
+
+        // Hide local theme if VCS is active.
+        if (
+          $stylesheet === $local_slug &&
+          ! in_array( $base_slug, $overrides['themes'], true ) &&
+          $active_theme !== $local_slug
+        ) {
+          unset( $themes[ $stylesheet ] );
+        }
+
+        // Hide VCS theme if local is active.
+        if (
+          $stylesheet === $base_slug &&
+          in_array( $base_slug, $overrides['themes'], true ) &&
+          $active_theme !== $base_slug
+        ) {
+          unset( $themes[ $stylesheet ] );
+        }
+      }
+    }
+
+    return $themes;
+  }
 }
 
 new LocalDevSwitcher();
