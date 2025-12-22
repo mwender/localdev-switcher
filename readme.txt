@@ -1,18 +1,18 @@
 === LocalDev Switcher ===
 Contributors: TheWebist
-Tags: development, plugins, local development, plugin management, workflow
+Tags: development, plugins, themes, local development, plugin management, workflow
 Requires at least: 6.5
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 0.7.0
+Stable tag: 0.8.0
 License: GPL2+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Easily switch between version-controlled plugins and local development versions by toggling in the Plugins screen.
+Easily switch between version-controlled plugins/themes and local development versions by toggling in the Plugins and Themes screens.
 
 == Description ==
 
-LocalDev Switcher allows you to seamlessly toggle between production plugins and their local development versions.
+LocalDev Switcher allows you to seamlessly toggle between production plugins and themes and their local development versions.
 
 **Usage:**
 
@@ -27,6 +27,8 @@ LocalDev Switcher allows you to seamlessly toggle between production plugins and
 
 LocalDev Switcher prevents double-loading and ensures only the desired version is active.
 
+For theme support, follow the same pattern as for plugin support. Setup your local version of your theme inside the theme directory using `localdev-{theme-slug}` for the local version's directory name.
+
 == Installation ==
 
 1. Upload the plugin folder to the `/wp-content/plugins/` directory.
@@ -37,7 +39,7 @@ LocalDev Switcher prevents double-loading and ensures only the desired version i
 
 = Does this work with themes? =
 
-Currently, LocalDev Switcher is designed for plugins only.
+Yes, setup your theme for local development using the pattern `localdev-{theme-slug}`.
 
 = What happens if I don't have a `localdev-{plugin-slug}` version? =
 
@@ -47,8 +49,12 @@ LocalDev Switcher will default to using the version-controlled plugin.
 
 1. Adds UI to show which plugins you can switch between VCS and Local.
 2. Toggle between VCS and Local versions of your plugins in the Plugins list.
+3. Switch between Local and VCS versions of your currently active theme.
 
 == Changelog ==
+
+= 0.8.0 =
+* Adding WordPress theme support. Now you can switch between Local and VCS versions of your currently active theme.
 
 = 0.7.0 =
 * Adding `update-assets.yml` action for future `Tested up to` edits without a full deploy.
