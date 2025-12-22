@@ -4,11 +4,9 @@
   "main": "Gruntfile.js",
   "author": "Michael Wender",
   "scripts": {
-    "start": "grunt default",
-    "readme": "grunt readme"
+    "readme": "npx wp-readme-to-markdown readme.txt README.md"
   },
   "devDependencies": {
-    "grunt": "^1.6.1",
-    "grunt-wp-readme-to-markdown": "~2"
+    "wp-readme-to-markdown": "^1.0.1"
   }
 }
