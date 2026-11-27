@@ -3,13 +3,12 @@
  * Plugin Name: LocalDev Switcher
  * Plugin URI: https://wordpress.org/plugins/localdev-switcher/
  * Description: Toggle between VCS and local development versions of plugins using the localdev-{plugin-slug} pattern. Place local development versions in wp-content/plugins/localdev-{plugin-slug} and use this plugin to toggle between versions from the Plugins screen.
- * Version: 0.8.0
+ * Version: 0.8.1
  * Author: Michael Wender
  * Author URI: https://mwender.com/
  * License: GPL2+
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 6.5
- * Tested up to: 6.9.0
  * Requires PHP: 8.1
  * Tags: development, plugins, local development, workflow
  */
@@ -89,6 +88,88 @@ class LocalDevSwitcher {
    */
   private function save_overrides( $overrides ) {
     update_option( 'localdev_switcher_overrides', $overrides );
+  }
+
+  /**
+   * Find the main plugin file of each copy in a plugin pair.
+   *
+   * @param string     $base_slug Base plugin slug.
+   * @param array|null $plugins   Plugins keyed by file. Defaults to get_plugins().
+   * @return array { vcs: string, local: string }, empty strings when not found.
+   */
+  private function get_plugin_pair_files( $base_slug, $plugins = null ) {
+    if ( null === $plugins ) {
+      $plugins = get_plugins();
+    }
+
+    $files = array(
+      'vcs'   => '',
+      'local' => '',
+    );
+
+    foreach ( array_keys( $plugins ) as $file ) {
+      $dir = dirname( $file );
+
+      if ( $dir === $base_slug ) {
+        $files['vcs'] = $file;
+      } elseif ( $dir === $this->local_prefix . $base_slug ) {
+        $files['local'] = $file;
+      }
+    }
+
+    return $files;
+  }
+
+  /**
+   * Whether the local copy of a plugin pair is the one in use.
+   *
+   * The active copy decides, so a copy activated some other way (WP-CLI, or
+   * before LocalDev Switcher was installed) is shown correctly. The saved
+   * override only decides when neither copy is active.
+   *
+   * @param string $base_slug Base plugin slug.
+   * @return bool
+   */
+  private function is_plugin_local( $base_slug ) {
+    $files  = $this->get_plugin_pair_files( $base_slug );
+    $active = (array) get_option( 'active_plugins', array() );
+
+    if ( $files['local'] && in_array( $files['local'], $active, true ) ) {
+      return true;
+    }
+
+    if ( $files['vcs'] && in_array( $files['vcs'], $active, true ) ) {
+      return false;
+    }
+
+    $overrides = $this->get_overrides();
+
+    return in_array( $base_slug, $overrides['plugins'], true );
+  }
+
+  /**
+   * Whether the local copy of a theme pair is the one in use.
+   *
+   * The active theme decides; the saved override only decides when neither
+   * copy is active.
+   *
+   * @param string $base_slug Base theme slug.
+   * @return bool
+   */
+  private function is_theme_local( $base_slug ) {
+    $active = get_stylesheet();
+
+    if ( $active === $this->local_prefix . $base_slug ) {
+      return true;
+    }
+
+    if ( $active === $base_slug ) {
+      return false;
+    }
+
+    $overrides = $this->get_overrides();
+
+    return in_array( $base_slug, $overrides['themes'], true );
   }
 
   /**
@@ -183,7 +264,7 @@ class LocalDevSwitcher {
 
     // Only allow toggling for known pairs.
     if ( ! in_array( $plugin_slug, $this->plugin_pairs, true ) ) {
-      wp_redirect( admin_url( 'plugins.php' ) );
+      wp_safe_redirect( admin_url( 'plugins.php' ) );
       exit;
     }
 
@@ -207,11 +288,11 @@ class LocalDevSwitcher {
     }
 
     if ( empty( $vcs_plugin_file ) || empty( $local_plugin_file ) ) {
-      wp_redirect( admin_url( 'plugins.php' ) );
+      wp_safe_redirect( admin_url( 'plugins.php' ) );
       exit;
     }
 
-    $is_local = in_array( $plugin_slug, $overrides['plugins'], true );
+    $is_local = $this->is_plugin_local( $plugin_slug );
 
     if ( $is_local ) {
       // Switch to VCS.
@@ -239,7 +320,7 @@ class LocalDevSwitcher {
     $this->save_overrides( $overrides );
     update_option( 'active_plugins', $active_plugins );
 
-    wp_redirect( admin_url( 'plugins.php' ) );
+    wp_safe_redirect( admin_url( 'plugins.php' ) );
     exit;
   }
 
@@ -266,8 +347,7 @@ class LocalDevSwitcher {
         continue;
       }
 
-      $overrides = $this->get_overrides();
-      $is_local  = in_array( $base_slug, $overrides['plugins'], true );
+      $is_local = $this->is_plugin_local( $base_slug );
 
       $indicator = $is_local
         ? '<span style="padding:2px 8px; background:#00aa00; color:#fff; border-radius:10px; font-size:11px;">LOCAL ACTIVE</span> '
@@ -291,7 +371,11 @@ class LocalDevSwitcher {
    * @return array
    */
   public function filter_plugins_list( $plugins ) {
-    $overrides = $this->get_overrides();
+    $is_local = array();
+
+    foreach ( $this->plugin_pairs as $base_slug ) {
+      $is_local[ $base_slug ] = $this->is_plugin_local( $base_slug );
+    }
 
     foreach ( $plugins as $plugin_file => $plugin_data ) {
       $slug = dirname( $plugin_file );
@@ -304,13 +388,13 @@ class LocalDevSwitcher {
         $local_slug = $this->local_prefix . $base_slug;
 
         // If VCS is active, hide localdev listing.
-        if ( $slug === $local_slug && ! in_array( $base_slug, $overrides['plugins'], true ) ) {
+        if ( $slug === $local_slug && ! $is_local[ $base_slug ] ) {
           unset( $plugins[ $plugin_file ] );
           continue 2;
         }
 
         // If localdev is active, hide VCS listing.
-        if ( $slug === $base_slug && in_array( $base_slug, $overrides['plugins'], true ) ) {
+        if ( $slug === $base_slug && $is_local[ $base_slug ] ) {
           unset( $plugins[ $plugin_file ] );
           continue 2;
         }
@@ -342,7 +426,7 @@ class LocalDevSwitcher {
 
     // Only allow toggling for known pairs.
     if ( ! in_array( $base_slug, $this->theme_pairs, true ) ) {
-      wp_redirect( admin_url( 'themes.php' ) );
+      wp_safe_redirect( admin_url( 'themes.php' ) );
       exit;
     }
 
@@ -352,12 +436,12 @@ class LocalDevSwitcher {
     $local_exists = isset( $themes[ $this->local_prefix . $base_slug ] );
 
     if ( ! $vcs_exists || ! $local_exists ) {
-      wp_redirect( admin_url( 'themes.php' ) );
+      wp_safe_redirect( admin_url( 'themes.php' ) );
       exit;
     }
 
     $overrides = $this->get_overrides();
-    $is_local  = in_array( $base_slug, $overrides['themes'], true );
+    $is_local  = $this->is_theme_local( $base_slug );
 
     if ( $is_local ) {
       $overrides['themes'] = array_values( array_diff( $overrides['themes'], array( $base_slug ) ) );
@@ -371,7 +455,7 @@ class LocalDevSwitcher {
     $this->save_overrides( $overrides );
     switch_theme( $target );
 
-    wp_redirect( admin_url( 'themes.php' ) );
+    wp_safe_redirect( admin_url( 'themes.php' ) );
     exit;
   }
 
@@ -382,33 +466,9 @@ class LocalDevSwitcher {
    * @return array
    */
   public function filter_themes_list( $themes ) {
-    $overrides    = $this->get_overrides();
-    $active_theme = get_stylesheet();
-
-    foreach ( $themes as $stylesheet => $theme_data ) {
-      foreach ( $this->theme_pairs as $base_slug ) {
-        $local_slug = $this->local_prefix . $base_slug;
-
-        // Hide local theme if VCS is active.
-        if (
-          $stylesheet === $local_slug &&
-          ! in_array( $base_slug, $overrides['themes'], true ) &&
-          $active_theme !== $local_slug
-        ) {
-          unset( $themes[ $stylesheet ] );
-          continue 2;
-        }
-
-        // Hide VCS theme if local is active.
-        if (
-          $stylesheet === $base_slug &&
-          in_array( $base_slug, $overrides['themes'], true ) &&
-          $active_theme !== $base_slug
-        ) {
-          unset( $themes[ $stylesheet ] );
-          continue 2;
-        }
-      }
+    foreach ( $this->theme_pairs as $base_slug ) {
+      $hide = $this->is_theme_local( $base_slug ) ? $base_slug : $this->local_prefix . $base_slug;
+      unset( $themes[ $hide ] );
     }
 
     return $themes;
@@ -448,8 +508,7 @@ class LocalDevSwitcher {
       return;
     }
 
-    $overrides = $this->get_overrides();
-    $is_local  = in_array( $base_slug, $overrides['themes'], true );
+    $is_local = $this->is_theme_local( $base_slug );
 
     $badge_text  = $is_local ? 'LOCAL ACTIVE' : 'VCS ACTIVE';
     $badge_bg    = $is_local ? '#00aa00' : '#0073aa';

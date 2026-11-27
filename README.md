@@ -1,10 +1,10 @@
 # LocalDev Switcher #
 **Contributors:** [TheWebist](https://profiles.wordpress.org/TheWebist/)  
-**Tags:** development, plugins, themes, local development, plugin management, workflow  
+**Tags:** development, plugins, themes, local development, plugin management  
 **Requires at least:** 6.5  
-**Tested up to:** 6.9  
+**Tested up to:** 7.1  
 **Requires PHP:** 8.1  
-**Stable tag:** 0.8.0  
+**Stable tag:** 0.8.1  
 **License:** GPL2+  
 **License URI:** https://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -52,6 +52,12 @@ LocalDev Switcher will default to using the version-controlled plugin.
 3. Switch between Local and VCS versions of your currently active theme.
 
 ## Changelog ##
+
+### 0.8.1 ###
+* Tested with WordPress 7.1.
+* Fixed: when a local copy was activated without LocalDev Switcher (with WP-CLI, say, or before it was installed), the Plugins screen hid that active copy and labelled the inactive one "VCS ACTIVE". The Plugins and Themes screens now go by which copy is actually active.
+* Redirects after a switch use wp_safe_redirect().
+* "Tested up to" is declared only in readme.txt, as WordPress.org requires, and the tags are trimmed to five.
 
 ### 0.8.0 ###
 * Adding WordPress theme support. Now you can switch between Local and VCS versions of your currently active theme.
