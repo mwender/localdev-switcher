@@ -3,13 +3,12 @@
  * Plugin Name: LocalDev Switcher
  * Plugin URI: https://wordpress.org/plugins/localdev-switcher/
  * Description: Toggle between VCS and local development versions of plugins using the localdev-{plugin-slug} pattern. Place local development versions in wp-content/plugins/localdev-{plugin-slug} and use this plugin to toggle between versions from the Plugins screen.
- * Version: 0.8.0
+ * Version: 0.8.1
  * Author: Michael Wender
  * Author URI: https://mwender.com/
  * License: GPL2+
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 6.5
- * Tested up to: 6.9.0
  * Requires PHP: 8.1
  * Tags: development, plugins, local development, workflow
  */
@@ -183,7 +182,7 @@ class LocalDevSwitcher {
 
     // Only allow toggling for known pairs.
     if ( ! in_array( $plugin_slug, $this->plugin_pairs, true ) ) {
-      wp_redirect( admin_url( 'plugins.php' ) );
+      wp_safe_redirect( admin_url( 'plugins.php' ) );
       exit;
     }
 
@@ -207,7 +206,7 @@ class LocalDevSwitcher {
     }
 
     if ( empty( $vcs_plugin_file ) || empty( $local_plugin_file ) ) {
-      wp_redirect( admin_url( 'plugins.php' ) );
+      wp_safe_redirect( admin_url( 'plugins.php' ) );
       exit;
     }
 
@@ -239,7 +238,7 @@ class LocalDevSwitcher {
     $this->save_overrides( $overrides );
     update_option( 'active_plugins', $active_plugins );
 
-    wp_redirect( admin_url( 'plugins.php' ) );
+    wp_safe_redirect( admin_url( 'plugins.php' ) );
     exit;
   }
 
@@ -342,7 +341,7 @@ class LocalDevSwitcher {
 
     // Only allow toggling for known pairs.
     if ( ! in_array( $base_slug, $this->theme_pairs, true ) ) {
-      wp_redirect( admin_url( 'themes.php' ) );
+      wp_safe_redirect( admin_url( 'themes.php' ) );
       exit;
     }
 
@@ -352,7 +351,7 @@ class LocalDevSwitcher {
     $local_exists = isset( $themes[ $this->local_prefix . $base_slug ] );
 
     if ( ! $vcs_exists || ! $local_exists ) {
-      wp_redirect( admin_url( 'themes.php' ) );
+      wp_safe_redirect( admin_url( 'themes.php' ) );
       exit;
     }
 
@@ -371,7 +370,7 @@ class LocalDevSwitcher {
     $this->save_overrides( $overrides );
     switch_theme( $target );
 
-    wp_redirect( admin_url( 'themes.php' ) );
+    wp_safe_redirect( admin_url( 'themes.php' ) );
     exit;
   }
 
