@@ -91,6 +91,88 @@ class LocalDevSwitcher {
   }
 
   /**
+   * Find the main plugin file of each copy in a plugin pair.
+   *
+   * @param string     $base_slug Base plugin slug.
+   * @param array|null $plugins   Plugins keyed by file. Defaults to get_plugins().
+   * @return array { vcs: string, local: string }, empty strings when not found.
+   */
+  private function get_plugin_pair_files( $base_slug, $plugins = null ) {
+    if ( null === $plugins ) {
+      $plugins = get_plugins();
+    }
+
+    $files = array(
+      'vcs'   => '',
+      'local' => '',
+    );
+
+    foreach ( array_keys( $plugins ) as $file ) {
+      $dir = dirname( $file );
+
+      if ( $dir === $base_slug ) {
+        $files['vcs'] = $file;
+      } elseif ( $dir === $this->local_prefix . $base_slug ) {
+        $files['local'] = $file;
+      }
+    }
+
+    return $files;
+  }
+
+  /**
+   * Whether the local copy of a plugin pair is the one in use.
+   *
+   * The active copy decides, so a copy activated some other way (WP-CLI, or
+   * before LocalDev Switcher was installed) is shown correctly. The saved
+   * override only decides when neither copy is active.
+   *
+   * @param string $base_slug Base plugin slug.
+   * @return bool
+   */
+  private function is_plugin_local( $base_slug ) {
+    $files  = $this->get_plugin_pair_files( $base_slug );
+    $active = (array) get_option( 'active_plugins', array() );
+
+    if ( $files['local'] && in_array( $files['local'], $active, true ) ) {
+      return true;
+    }
+
+    if ( $files['vcs'] && in_array( $files['vcs'], $active, true ) ) {
+      return false;
+    }
+
+    $overrides = $this->get_overrides();
+
+    return in_array( $base_slug, $overrides['plugins'], true );
+  }
+
+  /**
+   * Whether the local copy of a theme pair is the one in use.
+   *
+   * The active theme decides; the saved override only decides when neither
+   * copy is active.
+   *
+   * @param string $base_slug Base theme slug.
+   * @return bool
+   */
+  private function is_theme_local( $base_slug ) {
+    $active = get_stylesheet();
+
+    if ( $active === $this->local_prefix . $base_slug ) {
+      return true;
+    }
+
+    if ( $active === $base_slug ) {
+      return false;
+    }
+
+    $overrides = $this->get_overrides();
+
+    return in_array( $base_slug, $overrides['themes'], true );
+  }
+
+  /**
    * Detect plugin + theme pairs where BOTH VCS and localdev exist.
    *
    * @return void
@@ -210,7 +292,7 @@ class LocalDevSwitcher {
       exit;
     }
 
-    $is_local = in_array( $plugin_slug, $overrides['plugins'], true );
+    $is_local = $this->is_plugin_local( $plugin_slug );
 
     if ( $is_local ) {
       // Switch to VCS.
@@ -265,8 +347,7 @@ class LocalDevSwitcher {
         continue;
       }
 
-      $overrides = $this->get_overrides();
-      $is_local  = in_array( $base_slug, $overrides['plugins'], true );
+      $is_local = $this->is_plugin_local( $base_slug );
 
       $indicator = $is_local
         ? '<span style="padding:2px 8px; background:#00aa00; color:#fff; border-radius:10px; font-size:11px;">LOCAL ACTIVE</span> '
@@ -290,7 +371,11 @@ class LocalDevSwitcher {
    * @return array
    */
   public function filter_plugins_list( $plugins ) {
-    $overrides = $this->get_overrides();
+    $is_local = array();
+
+    foreach ( $this->plugin_pairs as $base_slug ) {
+      $is_local[ $base_slug ] = $this->is_plugin_local( $base_slug );
+    }
 
     foreach ( $plugins as $plugin_file => $plugin_data ) {
       $slug = dirname( $plugin_file );
@@ -303,13 +388,13 @@ class LocalDevSwitcher {
         $local_slug = $this->local_prefix . $base_slug;
 
         // If VCS is active, hide localdev listing.
-        if ( $slug === $local_slug && ! in_array( $base_slug, $overrides['plugins'], true ) ) {
+        if ( $slug === $local_slug && ! $is_local[ $base_slug ] ) {
           unset( $plugins[ $plugin_file ] );
           continue 2;
         }
 
         // If localdev is active, hide VCS listing.
-        if ( $slug === $base_slug && in_array( $base_slug, $overrides['plugins'], true ) ) {
+        if ( $slug === $base_slug && $is_local[ $base_slug ] ) {
           unset( $plugins[ $plugin_file ] );
           continue 2;
         }
@@ -356,7 +441,7 @@ class LocalDevSwitcher {
     }
 
     $overrides = $this->get_overrides();
-    $is_local  = in_array( $base_slug, $overrides['themes'], true );
+    $is_local  = $this->is_theme_local( $base_slug );
 
     if ( $is_local ) {
       $overrides['themes'] = array_values( array_diff( $overrides['themes'], array( $base_slug ) ) );
@@ -381,33 +466,9 @@ class LocalDevSwitcher {
    * @return array
    */
   public function filter_themes_list( $themes ) {
-    $overrides    = $this->get_overrides();
-    $active_theme = get_stylesheet();
-
-    foreach ( $themes as $stylesheet => $theme_data ) {
-      foreach ( $this->theme_pairs as $base_slug ) {
-        $local_slug = $this->local_prefix . $base_slug;
-
-        // Hide local theme if VCS is active.
-        if (
-          $stylesheet === $local_slug &&
-          ! in_array( $base_slug, $overrides['themes'], true ) &&
-          $active_theme !== $local_slug
-        ) {
-          unset( $themes[ $stylesheet ] );
-          continue 2;
-        }
-
-        // Hide VCS theme if local is active.
-        if (
-          $stylesheet === $base_slug &&
-          in_array( $base_slug, $overrides['themes'], true ) &&
-          $active_theme !== $base_slug
-        ) {
-          unset( $themes[ $stylesheet ] );
-          continue 2;
-        }
-      }
+    foreach ( $this->theme_pairs as $base_slug ) {
+      $hide = $this->is_theme_local( $base_slug ) ? $base_slug : $this->local_prefix . $base_slug;
+      unset( $themes[ $hide ] );
     }
 
     return $themes;
@@ -447,8 +508,7 @@ class LocalDevSwitcher {
       return;
     }
 
-    $overrides = $this->get_overrides();
-    $is_local  = in_array( $base_slug, $overrides['themes'], true );
+    $is_local = $this->is_theme_local( $base_slug );
 
     $badge_text  = $is_local ? 'LOCAL ACTIVE' : 'VCS ACTIVE';
     $badge_bg    = $is_local ? '#00aa00' : '#0073aa';

@@ -55,6 +55,7 @@ LocalDev Switcher will default to using the version-controlled plugin.
 
 ### 0.8.1 ###
 * Tested with WordPress 7.1.
+* Fixed: when a local copy was activated without LocalDev Switcher (with WP-CLI, say, or before it was installed), the Plugins screen hid that active copy and labelled the inactive one "VCS ACTIVE". The Plugins and Themes screens now go by which copy is actually active.
 * Redirects after a switch use wp_safe_redirect().
 * "Tested up to" is declared only in readme.txt, as WordPress.org requires, and the tags are trimmed to five.
 
